@@ -1,0 +1,472 @@
+{
+  "info": {
+    "name": "Hotel Eco Antigua — API y flujo de reserva",
+    "description": "19 requests con aserciones. Ejecutar en orden contra una base de prueba: disponibilidad, validaciones, creación, consulta, acceso denegado y cancelación.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5173"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Salud y conexión D1",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y servicio de reservas disponible', () => pm.response.to.have.status(200));",
+              "pm.test('JSON con base conectada', () => pm.expect(pm.response.json()).to.have.property('database', 'connected'));",
+              "pm.test('marca estado del servicio', () => pm.expect(pm.response.json()).to.have.property('ok', true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Disponibilidad válida",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/availability?checkIn={{checkIn}}&checkOut={{checkOut}}&guests=2"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const add = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);",
+              "pm.environment.set('checkIn', add(10));",
+              "pm.environment.set('checkOut', add(13));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y lista de habitaciones', () => pm.response.to.have.status(200));",
+              "var availabilityData = pm.response.json();",
+              "pm.test('cada opción incluye tarifa, capacidad e inventario', () => pm.expect(availabilityData.rooms).to.satisfy((rooms) => Array.isArray(rooms) && rooms.every((r) => Number.isInteger(r.nightlyRate) && Number.isInteger(r.available) && Number.isInteger(r.capacity))));",
+              "pm.test('número de noches correcto', () => pm.expect(availabilityData.nights).to.eql(3));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Disponibilidad sin llegada",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/availability?checkOut={{checkOut}}&guests=2"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 por parámetros requeridos', () => pm.response.to.have.status(400));",
+              "pm.test('error legible', () => pm.expect(pm.response.json().error).to.be.a('string'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Salida igual a llegada",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/availability?checkIn={{checkIn}}&checkOut={{checkIn}}&guests=2"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 por estancia de cero noches', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 Más de cinco huéspedes",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/availability?checkIn={{checkIn}}&checkOut={{checkOut}}&guests=6"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 por tamaño fuera de rango', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 Reserva sin datos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 y explicación', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().error).to.be.a('string'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Correo inválido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"guestName\":\"Prueba Newman\",\"guestEmail\":\"sin-dominio\",\"roomType\":\"patio\",\"checkIn\":\"{{checkIn}}\",\"checkOut\":\"{{checkOut}}\",\"guests\":2}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 y campo de correo', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().fields).to.have.property('guestEmail'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Exceso de capacidad",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"guestName\":\"Prueba Newman\",\"guestEmail\":\"postman.demo@example.com\",\"roomType\":\"patio\",\"checkIn\":\"{{checkIn}}\",\"checkOut\":\"{{checkOut}}\",\"guests\":3}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 por superar capacidad de Patio', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 Teléfono con letras",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"guestName\":\"Prueba Newman\",\"guestEmail\":\"postman.demo@example.com\",\"guestPhone\":\"telefono\",\"roomType\":\"patio\",\"checkIn\":\"{{checkIn}}\",\"checkOut\":\"{{checkOut}}\",\"guests\":2}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 por teléfono no válido', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().fields).to.have.property('guestPhone'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 Crear reserva para el flujo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"guestName\":\"Prueba Newman\",\"guestEmail\":\"postman.demo@example.com\",\"roomType\":\"patio\",\"checkIn\":\"{{checkIn}}\",\"checkOut\":\"{{checkOut}}\",\"guests\":2}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 con reserva confirmada', () => pm.response.to.have.status(201));",
+              "var createdReservationData = pm.response.json();",
+              "pm.test('código de confirmación de ocho caracteres', () => pm.expect(createdReservationData.reservation.confirmationCode).to.match(/^[A-HJ-NP-Z2-9]{8}$/));",
+              "pm.test('total es número', () => pm.expect(createdReservationData.reservation.total).to.be.a('number'));",
+              "pm.environment.set('reservationCode', createdReservationData.reservation.confirmationCode);",
+              "pm.environment.set('reservationEmail', 'postman.demo@example.com');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 Consultar reserva por código y correo",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reservations?code={{reservationCode}}&email={{reservationEmail}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 para credenciales correctas', () => pm.response.to.have.status(200));",
+              "pm.test('devuelve solo la reserva asociada', () => pm.expect(pm.response.json().reservation.confirmationCode).to.eql(pm.environment.get('reservationCode')));",
+              "pm.test('no expone correo en los datos de salida', () => pm.expect(pm.response.json().reservation).not.to.have.property('guestEmail'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 Correo distinto no revela reserva",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reservations?code={{reservationCode}}&email=otra.persona@example.com"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 genérico', () => pm.response.to.have.status(404));",
+              "pm.test('sin objeto de reserva', () => pm.expect(pm.response.json()).not.to.have.property('reservation'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 Cancelación con correo distinto",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"code\":\"{{reservationCode}}\",\"email\":\"otra.persona@example.com\"}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404 y reserva protegida', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 Cancelar reserva dentro del plazo",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"code\":\"{{reservationCode}}\",\"email\":\"{{reservationEmail}}\"}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y estado cancelado', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().reservation.status).to.eql('CANCELADA'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 Consultar estado cancelado",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reservations?code={{reservationCode}}&email={{reservationEmail}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 y estado persiste', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().reservation.status).to.eql('CANCELADA'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 No cancelar dos veces",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"code\":\"{{reservationCode}}\",\"email\":\"{{reservationEmail}}\"}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409 para cancelación repetida', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 Código de longitud incorrecta",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reservations?code=ABC&email=postman.demo%40example.com"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 para código mal formado', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 Fecha pasada en reserva",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"guestName\":\"Prueba Newman\",\"guestEmail\":\"postman.demo@example.com\",\"roomType\":\"patio\",\"checkIn\":\"2000-01-01\",\"checkOut\":\"2000-01-02\",\"guests\":1}"
+        },
+        "url": "{{baseUrl}}/api/reservations"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 para llegada pasada', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 Formato incompleto de consulta",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/reservations?code={{reservationCode}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 si falta el correo', () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
