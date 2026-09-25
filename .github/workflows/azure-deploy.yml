@@ -1,0 +1,49 @@
+name: Publicar en Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el proyecto
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+
+      - name: Instalar dependencias y compilar la página
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build:frontend
+
+      - name: Preparar los archivos que Azure necesita
+        run: |
+          mkdir -p build/azure-app/backend/src build/azure-app/azure build/azure-app/dist
+          cp azure/package.json build/azure-app/package.json
+          cp azure-server.js build/azure-app/azure-server.js
+          cp backend/db.js backend/domain.js backend/azure-db.js build/azure-app/backend/
+          cp backend/src/index.js build/azure-app/backend/src/index.js
+          cp azure/schema.sql build/azure-app/azure/schema.sql
+          cp -R dist/client build/azure-app/dist/client
+          npm install --omit=dev --no-audit --no-fund --prefix build/azure-app
+
+      - name: Publicar la aplicación web
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: build/azure-app

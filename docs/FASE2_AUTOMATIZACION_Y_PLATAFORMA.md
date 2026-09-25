@@ -17,7 +17,9 @@ En GitHub agrega el secreto `SONAR_TOKEN` y la variable `SONAR_ENABLED=true` en 
 
 ## Cuentas de nube
 
-El sitio preliminar usa Cloudflare Workers con D1. Para crear tu propio despliegue en GitHub Actions, configura `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_DATABASE_ID` como secretos y agrega el paso de despliegue después de aprobar el flujo de `main`. Mantén los datos de acceso fuera del repositorio. Ejecuta primero una migración en la base de QA y confirma la URL pública; luego habilita producción.
+El prototipo usa Cloudflare Workers con D1. Para el despliegue académico del grupo con Azure for Students, sigue [`DESPLIEGUE_AZURE_PASO_A_PASO.md`](DESPLIEGUE_AZURE_PASO_A_PASO.md): el adaptador Azure ejecuta la misma API sobre Azure App Service y PostgreSQL, y el flujo `.github/workflows/azure-deploy.yml` publica desde GitHub Actions. Guarda el perfil de publicación como secreto de GitHub y `DATABASE_URL` en la configuración privada de App Service. No subas credenciales al código. Revisa la cuota gratuita y el costo estimado en Azure antes de crear cada recurso.
+
+Si el equipo usa Cloudflare, conserva el flujo indicado en las secciones siguientes. No mezcles credenciales ni bases entre proveedores.
 
 La primera migración aplicada está versionada en `drizzle/0000_hotel_reservations.sql`. Para cambios futuros del esquema, genera una migración nueva con `pnpm run db:generate`; no edites el historial que ya se aplicó.
 
@@ -49,7 +51,7 @@ La rúbrica acepta `DEV`, `QA` y `PROD` o `main`; el equipo puede renombrar rama
 
 ## Despliegue automatizado
 
-El workflow publica en Cloudflare Workers al integrar `main` solo si se crean estos secretos del propio equipo: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_D1_DATABASE_ID`. Crea D1 en la cuenta Cloudflare que el equipo administrará y conecta su ID al job. La base de publicación de Sites usa infraestructura de Sites; para un GitHub Actions independiente, despliega el mismo código/migraciones a una base que el equipo controle. Nunca copies el token de publicación de Codex/Sites a GitHub.
+El workflow de Cloudflare publica en Workers al integrar `main` solo si se crean estos secretos del propio equipo: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_D1_DATABASE_ID`. Crea D1 en la cuenta Cloudflare que el equipo administrará y conecta su ID al job. La base de publicación de Sites usa infraestructura de Sites; para un GitHub Actions independiente, despliega el mismo código/migraciones a una base que el equipo controle. Nunca copies el token de publicación de Codex/Sites a GitHub. Para Azure, sigue únicamente la guía enlazada arriba.
 
 Configura el identificador real de D1 mediante el script `scripts/configure-cloudflare.mjs`; luego verifica en el resumen del job el commit desplegado. Si el equipo elige Render/Railway u otro proveedor, adapta solo el último job y describe la equivalencia de ambientes; no declares un despliegue hecho hasta abrir el enlace público.
 
