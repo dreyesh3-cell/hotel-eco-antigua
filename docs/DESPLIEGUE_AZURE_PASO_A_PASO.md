@@ -10,7 +10,7 @@ La publicación necesita tres piezas:
 2. **Azure Database for PostgreSQL:** guarda las reservas.
 3. **GitHub Actions:** copia los cambios de la rama `main` a App Service cuando se suben.
 
-El proyecto ya incluye un adaptador de Azure, el esquema de PostgreSQL y el flujo de GitHub Actions. Azure creará las tablas al iniciar la aplicación. No subas contraseñas al repositorio.
+El proyecto ya incluye un adaptador de Azure, el esquema de PostgreSQL y el flujo de GitHub Actions. También incluye `pnpm-workspace.yaml`, que autoriza los scripts de instalación requeridos por `esbuild`, `sharp` y `workerd`; ese archivo es necesario para que GitHub Actions pueda compilar. Azure creará las tablas al iniciar la aplicación. No subas contraseñas al repositorio.
 
 ## Parte A: crea la aplicación web
 
@@ -97,7 +97,16 @@ El XML contiene credenciales privadas. No lo compartas ni lo subas como archivo 
 
 ### 5. Sube el flujo de publicación al repositorio
 
-El archivo `.github/workflows/azure-deploy.yml` prepara la página, el backend y sus dependencias, y publica el resultado. Guarda los cambios del proyecto en la rama **main** y súbelos a GitHub. También puedes ejecutar el flujo manualmente en GitHub → **Actions → Publicar en Azure → Run workflow**.
+El archivo `.github/workflows/azure-deploy.yml` prepara la página, el backend y sus dependencias, y publica el resultado. Para que no tengas que copiar cada archivo manualmente, preparé `output/Actualizacion_Azure_GitHub.zip` con todos los archivos modificados que necesita esta publicación.
+
+1. Si ya tienes en GitHub Desktop una copia descargada del repositorio, abre esa copia. Si no la tienes, abre GitHub Desktop y elige **File → Clone repository → URL**. Pega `https://github.com/dreyesh3-cell/hotel-eco-antigua.git` y selecciona una carpeta nueva, por ejemplo `C:\Users\Admin\Desktop\hotel-eco-antigua-github`.
+2. Abre el Explorador de archivos y localiza `output/Actualizacion_Azure_GitHub.zip` en la carpeta del proyecto que te compartí.
+3. Haz clic derecho en el ZIP → **Extraer todo**. Como destino elige la carpeta clonada en el paso 1 (la que contiene `README.md`, `package.json` y `frontend`). Si Windows pregunta si deseas reemplazar algunos archivos, elige **Reemplazar**.
+4. Regresa a GitHub Desktop y selecciona ese repositorio. Debes ver varios archivos en **Changes / Cambios**, incluidas las rutas `.github/workflows/azure-deploy.yml` y `pnpm-workspace.yaml`.
+5. En **Summary / Resumen** escribe `Preparar despliegue de Azure`; pulsa **Commit to main** y después **Push origin**.
+6. En el sitio de GitHub, abre **Actions → Publicar en Azure** y espera a que la ejecución quede verde. El flujo también empieza automáticamente al subir el commit a `main`.
+
+No uses como destino la carpeta de trabajo que diga que `main` no tiene commits; primero clona el repositorio publicado como se indica arriba. Confirma que ya agregaste el secreto `AZURE_WEBAPP_PUBLISH_PROFILE` y la variable `AZURE_WEBAPP_NAME` antes de iniciar la publicación.
 
 ## Parte E: comprueba que sí funciona
 
@@ -111,7 +120,7 @@ El archivo `.github/workflows/azure-deploy.yml` prepara la página, el backend y
 ## Si algo falla
 
 - **Azure dice que la región está prohibida o muestra `RequestDisallowedByAzure`:** no vuelvas a intentar con esa región. Busca **Policy** en Azure Portal → **Assignments** (Asignaciones), abre la regla llamada **Allowed resource deployment regions** o **Allowed locations**, y mira **Parameters** (Parámetros). Usa una región que aparezca en esa lista tanto para App Service como para PostgreSQL. Las suscripciones de estudiante pueden restringir regiones; la lista permitida depende de la suscripción. Si no puedes ver la regla o ninguna región permitida funciona para ambos servicios, abre el despliegue fallido desde **Grupo de recursos → Implementaciones → implementación fallida → Detalles del error** y comparte el código con el administrador de la suscripción o con soporte de Azure.
-- **GitHub Actions queda rojo:** abre la ejecución y revisa el paso con una X roja. Si menciona `AZURE_WEBAPP_NAME` o el perfil, vuelve a revisar los nombres del secreto y la variable.
+- **GitHub Actions queda rojo durante la instalación:** confirma que `pnpm-workspace.yaml` esté en la raíz del repositorio y que incluya permisos `allowBuilds` para `esbuild`, `sharp` y `workerd`. Si el error aparece en el paso de publicación y menciona `AZURE_WEBAPP_NAME` o el perfil, revisa los nombres del secreto y la variable.
 - **La página da error 503:** abre App Service → **Supervisión → Secuencia de registro**. Confirma que exista `DATABASE_URL`, que la base `hoteleco` esté creada y que el firewall permita la conexión desde App Service.
 - **`/api/health` no responde como conectado:** revisa usuario, contraseña, host y nombre de la base en `DATABASE_URL`. Las tablas se crean automáticamente cuando arranca el servidor.
 - **Azure muestra un costo diferente de cero:** pausa el proceso y revisa el plan elegido y las cuotas en **Suscripción → Servicios gratuitos** antes de continuar.
