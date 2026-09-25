@@ -1,0 +1,37 @@
+id,requerimiento,tecnica,precondiciones,datos_de_prueba,pasos,resultado_esperado,prioridad
+CP-01,RF-01,Partición de equivalencia,API y D1 disponibles,"llegada futura; salida posterior; 2 huéspedes",Enviar búsqueda de disponibilidad,200 y habitaciones que admiten al grupo,P1
+CP-02,RF-01,Partición de equivalencia,API disponible,"llegada 10 días pasada; salida futura",Buscar disponibilidad,400 con mensaje de llegada pasada,P1
+CP-03,RF-01,Partición de equivalencia,API disponible,"2026-02-30 a 2026-03-02",Buscar disponibilidad,400 por fecha de calendario inválida,P1
+CP-04,RF-01,Partición de equivalencia,API disponible,"salida igual a llegada",Buscar disponibilidad,400: estancia mínima de una noche,P1
+CP-05,RF-01,Partición de equivalencia,API disponible,"llegada futura; salida 31 noches después",Buscar disponibilidad,400: máximo 30 noches,P1
+CP-06,RF-01,Partición de equivalencia,API disponible,"huéspedes = 0",Buscar disponibilidad,400 por cantidad fuera del rango 1 a 5,P1
+CP-07,RF-02,Partición de equivalencia,API y D1 disponibles,"habitación patio; 2 huéspedes",Consultar disponibilidad para fechas libres,La habitación Patio aparece apta y el total equivale a tarifa × noches,P1
+CP-08,RF-09,Partición de equivalencia,Aplicación abierta,"guía de lugares de Antigua y Sacatepéquez",Abrir la sección Qué hacer,Se muestran al menos 10 lugares con descripción y enlace de mapa,P2
+CP-09,RF-10,Partición de equivalencia,Aplicación abierta en escritorio,"navegador con teclado",Recorrer navegación y formularios usando Tab/Enter,Controles tienen etiqueta y foco visible; se puede completar el flujo,P1
+CP-10,RF-01,Análisis de valores límite,API disponible,"exactamente 1 noche",Buscar disponibilidad,200 y nights = 1,P1
+CP-11,RF-01,Análisis de valores límite,API disponible,"exactamente 30 noches",Buscar disponibilidad,200 y nights = 30,P1
+CP-12,RF-01,Análisis de valores límite,API disponible,"exactamente 31 noches",Buscar disponibilidad,400 por exceder el límite,P1
+CP-13,RF-01,Análisis de valores límite,API disponible,"llegada hoy; salida mañana",Buscar disponibilidad,200 si la política permite llegada en la fecha actual,P2
+CP-14,RF-01,Análisis de valores límite,API disponible,"llegada ayer; salida mañana",Buscar disponibilidad,400 por fecha pasada,P1
+CP-15,RF-07,Análisis de valores límite,Reserva confirmada; reloj fijado para prueba,"llegada exactamente 48 horas después del límite",Solicitar cancelación,La cancelación se acepta en el límite de 48 h,P1
+CP-16,RF-08,Análisis de valores límite,Reserva confirmada; reloj fijado para prueba,"llegada 47 h 59 min después",Solicitar cancelación,409; estado continúa CONFIRMADA,P1
+CP-17,RF-02,Análisis de valores límite,D1 disponible,"Habitación Patio con 2 huéspedes",Buscar y confirmar reserva,La capacidad límite se acepta,P1
+CP-18,RF-02,Análisis de valores límite,D1 disponible,"Habitación Patio con 3 huéspedes",Buscar y confirmar reserva,Se rechaza el grupo por capacidad máxima 2,P1
+CP-19,RF-04,Tabla de decisión,"fechas futuras; habitación con inventario",Nombre válido + correo válido + capacidad válida + habitación disponible,Crear reserva,201 con reserva CONFIRMADA y total correcto,P1
+CP-20,RF-03,Tabla de decisión,"5 reservas activas Patio para el mismo intervalo",Nueva solicitud Patio válida para intervalo superpuesto,Intentar reservar la unidad agotada,409; no se crea reserva extra,P1
+CP-21,RF-04,Tabla de decisión,"API disponible","correo correcto; huéspedes sobre la capacidad",Enviar creación de reserva,400 y ninguna fila se guarda,P1
+CP-22,RF-01,Tabla de decisión,"API disponible","fecha inexistente + habitación libre",Enviar búsqueda,400; disponibilidad no omite validación de fechas,P1
+CP-23,RF-04,Tabla de decisión,"API disponible","nombre y fechas válidas; correo sin dominio",Enviar creación de reserva,400 con error de correo,P1
+CP-24,RF-06,Tabla de decisión,Reserva confirmada conocida,"código exacto y correo exacto (normaliza mayúsculas y espacios)",Consultar reserva,200 con datos de esa reserva,P1
+CP-25,RF-06,Tabla de decisión,Reserva confirmada conocida,"código exacto y correo de otra persona",Consultar reserva,404 genérico sin revelar reserva,P1
+CP-26,RF-07,Tabla de decisión,Reserva confirmada y llegada a más de 48 h,"código y correo válidos",Cancelar reserva,200; estado cambia a CANCELADA,P1
+CP-27,RF-08,Tabla de decisión,Reserva confirmada y llegada dentro de 48 h,"código y correo válidos",Cancelar reserva,409; reserva no cambia de estado,P1
+CP-28,RF-05,Transición de estados,No existe reserva para solicitud,"solicitud válida",Crear reserva,estado inicial del flujo = CONFIRMADA y se emite código,P1
+CP-29,RF-07,Transición de estados,Reserva CONFIRMADA; llegada con más de 48 h,"código + correo del huésped",Cancelar,CONFIRMADA → CANCELADA,P1
+CP-30,RF-08,Transición de estados,Reserva CANCELADA,"código + correo coincidentes",Consultar,La reserva sigue CANCELADA; no se reactiva,P1
+CP-31,RF-08,Transición de estados,Reserva CANCELADA,"código + correo coincidentes",Intentar cancelar otra vez,409; permanece CANCELADA,P2
+CP-32,RF-06,Transición de estados,Reserva CONFIRMADA,"correo no coincidente",Intentar cancelar,404; estado y datos de la reserva permanecen iguales,P1
+CP-33,RF-04,Transición de estados,Error simulado de servicio D1,"solicitud válida",Crear una reserva,503 claro; la interfaz conserva datos y no anuncia confirmación,P1
+CP-34,RF-03,Transición de estados,Reserva cancelada y D1 disponible,"mismo tipo e intervalo previamente ocupado",Buscar disponibilidad,Inventario incrementa en una unidad,P1
+CP-35,RF-03,Transición de estados,Una unidad libre; dos solicitudes concurrentes superpuestas,"dos solicitudes válidas para la última unidad",Lanzar ambas solicitudes en paralelo,Exactamente una respuesta 201 y otra 409; no hay sobreventa,P1
+CP-36,RF-10,Transición de estados,Aplicación abierta en viewport 360 × 800,"búsqueda → elegir habitación → reserva de prueba",Completar flujo desde inicio y consultar confirmación,La UI conserva fechas y selección; no hay desbordamiento horizontal,P2
