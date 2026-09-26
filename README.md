@@ -35,6 +35,8 @@ La ejecución local se encuentra documentada en [`docs/EVIDENCIA_EJECUCIONES_LOC
 
 Para publicar la aplicación completa en Azure, sigue [`docs/DESPLIEGUE_AZURE_PASO_A_PASO.md`](docs/DESPLIEGUE_AZURE_PASO_A_PASO.md). Configura las variables y credenciales en Azure y GitHub; no subas contraseñas al repositorio.
 
+Si la cuota gratuita de Azure detiene la aplicación, puedes desplegarla en Cloudflare Workers con la base D1 siguiendo [`docs/DESPLIEGUE_CLOUDFLARE_PASO_A_PASO.md`](docs/DESPLIEGUE_CLOUDFLARE_PASO_A_PASO.md). Esta alternativa también requiere configurar variables y un secreto en GitHub.
+
 Para actualizar el PDF y volver a crear el ZIP después de completar la información del equipo y las evidencias, haz doble clic en `PREPARAR_ENTREGA.bat`.
 
 Los diagramas de arquitectura y diagramas funcionales editables están en [`docs/DIAGRAMAS.md`](docs/DIAGRAMAS.md). El PDF de fase 1 incluye un anexo gráfico de cuatro páginas.
