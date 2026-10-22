@@ -1,3 +1,4 @@
+run-name: Calidad en ${{ github.ref_name }}
 name: Calidad
 
 on:
