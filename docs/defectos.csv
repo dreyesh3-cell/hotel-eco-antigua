@@ -9,3 +9,4 @@ DEF-07,,,,,,,,,,,
 DEF-08,,,,,,,,,,,
 DEF-09,,,,,,,,,,,
 DEF-10,,,,,,,,,,,
+DEF-11,"Textos secundarios con contraste insuficiente en varias secciones",RNF-03,RNF-03-AXE-01,Alta,Alta,"Sitio publicado (versión de qa; una sola URL)","Abrir la URL pública en 360x800 y ejecutar el análisis de axe DevTools en #mi-reserva.","Los textos cumplen WCAG 2 AA: contraste mínimo 4.5:1 para texto normal.","axe DevTools reporta 38 instancias de contraste insuficiente; los ejemplos y ratios están en el README de evidencias.",docs/evidencias/RNF03_AXE_2026-10-23/README.md,ABIERTO
