@@ -29,9 +29,7 @@ export default function Home() {
   const [lookupBusy, setLookupBusy] = useState(false);
 
   useEffect(() => {
-    if (selectedRoom) {
-      document.querySelector<HTMLInputElement>("#booking-form [name='guestName']")!.focus();
-    }
+    if (selectedRoom) document.querySelector<HTMLInputElement>("#booking-form [name='guestName']")!.focus();
   }, [selectedRoom]);
 
   async function searchRooms(event: FormEvent<HTMLFormElement>) {
