@@ -26,7 +26,7 @@ jobs:
       - name: Pruebas unitarias
         run: pnpm run test
       - name: Cobertura
-        run: pnpm run test:coverage
+        run: pnpm run test:coverage:lcov
       - name: Verificación de tipos
         run: pnpm run typecheck
       - name: Compilación frontend y backend
