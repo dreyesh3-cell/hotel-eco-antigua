@@ -1,0 +1,52 @@
+run-name: Calidad en ${{ github.ref_name }}
+name: Calidad
+
+on:
+  pull_request:
+    branches: [dev, qa, main]
+  push:
+    branches: [dev, qa, main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Pruebas unitarias
+        run: pnpm run test
+      - name: Cobertura
+        run: pnpm run test:coverage:lcov
+      - name: Verificación de tipos
+        run: pnpm run typecheck
+      - name: Compilación frontend y backend
+        run: pnpm run build
+      - name: Análisis SonarCloud
+        if: ${{ vars.SONAR_ENABLED == 'true' }}
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+      - name: Migración de base local
+        run: pnpm run db:migrate:local
+      - name: Iniciar API local
+        run: |
+          nohup pnpm run dev:backend > /tmp/hotel-api.log 2>&1 &
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:8787/api/health; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/hotel-api.log
+          exit 1
+      - name: Pruebas de API con Newman
+        run: pnpm run test:api
