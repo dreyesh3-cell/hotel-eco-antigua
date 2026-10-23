@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowDown, ArrowRight, CalendarDays, Check, ChevronDown, Clock3, Compass, Leaf, MapPin, Minus, ShieldCheck, Users, X } from "lucide-react";
 import { attractions } from "./attractions";
 import { defaultStay, formatQuetzales, validateSearch } from "../booking-form.js";
@@ -19,6 +19,7 @@ export default function Home() {
   const [stay, setStay] = useState(() => defaultStay());
   const [availability, setAvailability] = useState<AvailabilityRoom[] | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<AvailabilityRoom | null>(null);
+  const guestNameInputRef = useRef<HTMLInputElement>(null);
   const [searchError, setSearchError] = useState("");
   const [busy, setBusy] = useState(false);
   const [booking, setBooking] = useState<Reservation | null>(null);
@@ -27,6 +28,10 @@ export default function Home() {
   const [foundBooking, setFoundBooking] = useState<Reservation | null>(null);
   const [lookupError, setLookupError] = useState("");
   const [lookupBusy, setLookupBusy] = useState(false);
+
+  useEffect(() => {
+    if (selectedRoom) guestNameInputRef.current?.focus();
+  }, [selectedRoom]);
 
   async function searchRooms(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -114,7 +119,7 @@ export default function Home() {
         </form>
         {searchError && <p className="form-feedback error" role="alert">{searchError}</p>}
         {availability && <div className="room-results"><div className="results-heading"><div><span className="eyebrow">DISPONIBILIDAD</span><h3>Elige dónde descansar.</h3></div><span className="date-summary"><CalendarDays size={15} /> {stay.checkIn} — {stay.checkOut}</span></div><div className="room-grid">{availability.map((room) => <article className={`room-card ${room.available < 1 ? "room-sold" : ""}`} key={room.id}><div className={`room-art room-art-${room.id}`} aria-hidden="true"><span className="room-sun" /><span className="room-window" /><span className="room-leaf">✳</span></div><div className="room-content"><div className="room-title"><h4>{room.name}</h4><span className="room-capacity"><Users size={13} /> {room.capacity}</span></div><p>{room.description}</p><ul>{room.features.map((feature) => <li key={feature}><Check size={13} /> {feature}</li>)}</ul><div className="room-price"><span><b>{formatQuetzales(room.nightlyRate)}</b> <small>/ noche</small></span><button disabled={room.available < 1} onClick={() => { setSelectedRoom(room); setBookingError(""); document.getElementById("booking-form")?.scrollIntoView({ behavior: "smooth", block: "center" }); }}>{room.available > 0 ? "Elegir" : "Agotada"} {room.available > 0 && <ArrowRight size={14} />}</button></div>{room.available > 0 && <small className="availability-note">{room.available} {room.available === 1 ? "habitación disponible" : "habitaciones disponibles"}</small>}</div></article>)}</div><p className="rate-note">Tarifas de demostración en quetzales. El hotel debe confirmar precios y servicios antes de recibir reservas reales.</p></div>}
-        {selectedRoom && <form className="guest-form" id="booking-form" onSubmit={submitBooking}><div className="guest-form-heading"><div><span className="eyebrow">CASI LISTO</span><h3>Completa tu reserva</h3></div><button type="button" className="icon-button" aria-label="Cerrar formulario" onClick={() => setSelectedRoom(null)}><X size={18} /></button></div><div className="selected-summary"><span>{selectedRoom.name}</span><span>{stay.checkIn} — {stay.checkOut}</span><span>{stay.guests} {stay.guests === 1 ? "huésped" : "huéspedes"}</span></div><div className="guest-fields"><label>Nombre completo<input name="guestName" autoComplete="name" minLength={2} maxLength={100} required placeholder="Como aparece en tu identificación" /></label><label>Correo electrónico<input name="guestEmail" type="email" autoComplete="email" maxLength={160} required placeholder="tu@correo.com" /></label><label>Teléfono <small>(opcional)</small><input name="guestPhone" type="tel" autoComplete="tel" maxLength={25} placeholder="+502 0000 0000" /></label></div>{bookingError && <p className="form-feedback error" role="alert">{bookingError}</p>}<div className="guest-form-bottom"><p><ShieldCheck size={15} /> Tus datos se usan para gestionar esta reserva. No procesamos pagos en línea.</p><button className="search-button" disabled={busy}>{busy ? "Guardando…" : <>Confirmar reserva <ArrowRight size={16} /></>}</button></div></form>}
+        {selectedRoom && <form className="guest-form" id="booking-form" onSubmit={submitBooking}><div className="guest-form-heading"><div><span className="eyebrow">CASI LISTO</span><h3>Completa tu reserva</h3></div><button type="button" className="icon-button" aria-label="Cerrar formulario" onClick={() => setSelectedRoom(null)}><X size={18} /></button></div><div className="selected-summary"><span>{selectedRoom.name}</span><span>{stay.checkIn} — {stay.checkOut}</span><span>{stay.guests} {stay.guests === 1 ? "huésped" : "huéspedes"}</span></div><div className="guest-fields"><label>Nombre completo<input ref={guestNameInputRef} name="guestName" autoComplete="name" minLength={2} maxLength={100} required placeholder="Como aparece en tu identificación" /></label><label>Correo electrónico<input name="guestEmail" type="email" autoComplete="email" maxLength={160} required placeholder="tu@correo.com" /></label><label>Teléfono <small>(opcional)</small><input name="guestPhone" type="tel" autoComplete="tel" maxLength={25} placeholder="+502 0000 0000" /></label></div>{bookingError && <p className="form-feedback error" role="alert">{bookingError}</p>}<div className="guest-form-bottom"><p><ShieldCheck size={15} /> Tus datos se usan para gestionar esta reserva. No procesamos pagos en línea.</p><button className="search-button" disabled={busy}>{busy ? "Guardando…" : <>Confirmar reserva <ArrowRight size={16} /></>}</button></div></form>}
         {booking && <div className="confirmation-card" role="status"><div className="confirmation-icon"><Check size={21} /></div><div><span className="eyebrow">RESERVA CONFIRMADA</span><h3>Te esperamos, {booking.guestName.split(" ")[0]}.</h3><p>Guarda este código para consultar o cancelar tu reserva.</p><strong className="confirmation-code">{booking.confirmationCode}</strong><div className="confirmation-details"><span>{booking.roomType}</span><span>{booking.checkIn} — {booking.checkOut}</span><span>{formatQuetzales(booking.total)}</span></div></div></div>}
       </section>
 
