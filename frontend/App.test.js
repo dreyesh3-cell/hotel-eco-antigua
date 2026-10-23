@@ -18,9 +18,12 @@ const { createRoot } = await import("react-dom/client");
 const { default: Home } = await import("./src/App.tsx");
 
 test("al elegir una habitación, el foco pasa al primer campo de reserva", async () => {
+  let completeReservation;
   globalThis.fetch = async (_url, options = {}) => {
     if (options.method === "POST") {
-      return { ok: false, json: async () => ({ error: "Reserva rechazada para la prueba" }) };
+      return new Promise((resolve) => {
+        completeReservation = () => resolve({ ok: false, json: async () => ({ error: "Reserva rechazada para la prueba" }) });
+      });
     }
     return {
       ok: true,
@@ -66,6 +69,11 @@ test("al elegir una habitación, el foco pasa al primer campo de reserva", async
     guestForm.elements.namedItem("guestEmail").value = "prueba@example.com";
     await act(async () => {
       guestForm.dispatchEvent(new browser.Event("submit", { bubbles: true, cancelable: true }));
+      await Promise.resolve();
+    });
+    assert.match(container.textContent, /Guardando…/);
+    await act(async () => {
+      completeReservation();
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
     assert.match(container.textContent, /Reserva rechazada para la prueba/);
