@@ -9,6 +9,9 @@ import AntiguaIllustration from "./AntiguaIllustration";
 type AvailabilityRoom = { id: string; name: string; description: string; nightlyRate: number; capacity: number; available: number; features: string[] };
 type Reservation = { id: string; confirmationCode: string; guestName: string; roomType: string; checkIn: string; checkOut: string; guests: number; total: number; status: string };
 
+const buildRef = import.meta.env.VITE_BUILD_REF || "local";
+const buildSha = (import.meta.env.VITE_BUILD_SHA || "local").slice(0, 7);
+
 const rooms = [
   { id: "patio", name: "Habitación Patio", description: "Un espacio tranquilo para dos, con detalles de madera y textiles locales.", nightlyRate: 685, capacity: 2, features: ["1–2 huéspedes", "Cama queen", "Desayuno incluido"] },
   { id: "volcan", name: "Habitación Volcán", description: "Más amplitud para descansar después de caminar por la ciudad.", nightlyRate: 845, capacity: 3, features: ["1–3 huéspedes", "Cama king", "Balcón privado"] },
@@ -124,7 +127,7 @@ export default function Home() {
 
       <section className="manage-section" id="mi-reserva"><div className="manage-copy"><span className="eyebrow">YA TIENES UNA RESERVA</span><h2>La tienes a mano.</h2><p>Consulta los detalles o cancela con tu código de confirmación y el correo usado al reservar.</p><p className="cancel-policy"><Clock3 size={15} /> Puedes cancelar sin costo hasta 48 horas antes de la llegada.</p></div><div className="manage-panel"><form onSubmit={findBooking}><label>Código de confirmación<input value={lookup.code} onChange={(e) => setLookup({ ...lookup, code: e.target.value.toUpperCase() })} minLength={8} maxLength={8} required placeholder="Ej. ECO8K2PM" /></label><label>Correo de la reserva<input value={lookup.email} onChange={(e) => setLookup({ ...lookup, email: e.target.value })} type="email" required placeholder="tu@correo.com" /></label><button className="search-button" disabled={lookupBusy}>{lookupBusy ? "Buscando…" : <>Buscar mi reserva <ArrowRight size={16} /></>}</button></form>{lookupError && <p className="form-feedback error" role="alert">{lookupError}</p>}{foundBooking && <div className="lookup-result"><div className="lookup-title"><span>{foundBooking.roomType}</span><span className={foundBooking.status === "CANCELADA" ? "status-cancelled" : "status-confirmed"}>{foundBooking.status === "CANCELADA" ? "Cancelada" : "Confirmada"}</span></div><p>{foundBooking.checkIn} — {foundBooking.checkOut} · {foundBooking.guests} huéspedes</p><p>Total {formatQuetzales(foundBooking.total)}</p>{foundBooking.status === "CONFIRMADA" && <button className="cancel-link" type="button" disabled={lookupBusy} onClick={cancelBooking}><Minus size={14} /> Cancelar reserva</button>}</div>}</div></section>
 
-      <footer className="site-footer"><a className="brand footer-brand" href="#inicio"><span className="brand-mark"><Leaf size={18} /></span><span>Hotel Eco <b>Antigua</b></span></a><p>Un lugar para estar presente.</p><div className="footer-links"><a href="#habitaciones">Habitaciones</a><a href="#explorar">Guía local</a><a href="#mi-reserva">Mi reserva</a></div><small>Prototipo académico · Tarifas e inventario de demostración</small></footer>
+      <footer className="site-footer"><a className="brand footer-brand" href="#inicio"><span className="brand-mark"><Leaf size={18} /></span><span>Hotel Eco <b>Antigua</b></span></a><p>Un lugar para estar presente.</p><div className="footer-links"><a href="#habitaciones">Habitaciones</a><a href="#explorar">Guía local</a><a href="#mi-reserva">Mi reserva</a></div><small>Prototipo académico · Tarifas e inventario de demostración · Versión {buildRef} · {buildSha}</small></footer>
     </main>
   );
 }

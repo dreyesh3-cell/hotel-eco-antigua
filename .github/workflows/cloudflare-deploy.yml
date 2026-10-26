@@ -29,6 +29,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Compilar aplicación
+        env:
+          VITE_BUILD_REF: ${{ github.ref_name }}
+          VITE_BUILD_SHA: ${{ github.sha }}
         run: pnpm run build
 
       - name: Configurar la cuenta y base D1
