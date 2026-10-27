@@ -154,6 +154,7 @@ button,a,input,select { -webkit-tap-highlight-color:transparent; }
 .cancel-link { display:flex; align-items:center; gap:5px; margin-top:10px; padding:0 0 4px; border:0; border-bottom:1px solid #d5b1a0; background:transparent; color:#984c3e; font-size:10px; cursor:pointer; }
 .site-footer { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:28px clamp(24px,6.2vw,96px) 21px; background:var(--deep); color:#f2efe4; }
 .footer-brand { font-size:15px; }
+.site-footer .brand b { color:#e8b09a; }
 .footer-brand .brand-mark { width:30px; height:30px; background:#49604e; }
 .site-footer>p { margin:0; color:#c2c7b9; font:italic 12px Georgia,serif; }
 .footer-links { display:flex; justify-content:flex-end; gap:17px; font-size:9px; color:#d4d8cc; }
