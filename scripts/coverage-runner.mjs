@@ -65,8 +65,37 @@ const vite = await createServer({
 });
 try {
   const { default: Home } = await vite.ssrLoadModule("/src/App.tsx");
-  const markup = renderToStaticMarkup(createElement(Home));
-  assert.match(markup, /Versión qa · abcdef1/);
+  const defaultMarkup = renderToStaticMarkup(createElement(Home));
+  assert.match(defaultMarkup, /Versión qa · abcdef1/);
+
+  const featuredRoom = { id: "patio", name: "Habitación Patio", description: "Patio tranquilo", nightlyRate: 685, capacity: 2, available: 1, features: ["Cama queen"] };
+  const soldRoom = { id: "volcan", name: "Habitación Volcán", description: "Vista al volcán", nightlyRate: 845, capacity: 3, available: 0, features: [] };
+  const reservation = { id: "test", confirmationCode: "ABCD1234", guestName: "Ana Ejemplo", roomType: "Habitación Patio", checkIn: "2026-11-01", checkOut: "2026-11-03", guests: 1, total: 1370, status: "CONFIRMADA" };
+  const populatedMarkup = renderToStaticMarkup(createElement(Home, {
+    initialState: {
+      stay: { checkIn: "2026-11-01", checkOut: "2026-11-03", guests: 1, today: "2026-10-26" },
+      availability: [featuredRoom, soldRoom],
+      selectedRoom: featuredRoom,
+      searchError: "No hay disponibilidad para otras fechas.",
+      booking: reservation,
+      bookingError: "No se pudo guardar la reserva.",
+      lookup: { code: "ABCD1234", email: "ana@example.com" },
+      foundBooking: reservation,
+      lookupError: "No se encontró otra reserva.",
+      busy: true,
+      lookupBusy: true,
+    },
+  }));
+  assert.match(populatedMarkup, /Habitación Patio/);
+  assert.match(populatedMarkup, /Agotada/);
+  assert.match(populatedMarkup, /Te esperamos, Ana/);
+  assert.match(populatedMarkup, /Cancelar reserva/);
+
+  const cancelledMarkup = renderToStaticMarkup(createElement(Home, {
+    initialState: { foundBooking: { ...reservation, guests: 2, status: "CANCELADA" } },
+  }));
+  assert.match(cancelledMarkup, /Cancelada/);
+  assert.doesNotMatch(cancelledMarkup, /Cancelar reserva/);
 } finally {
   await vite.close();
 }

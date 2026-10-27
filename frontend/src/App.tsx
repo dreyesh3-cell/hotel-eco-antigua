@@ -9,6 +9,19 @@ import { cancelReservationAction, lookupReservationAction, searchRoomsAction, su
 
 type AvailabilityRoom = { id: string; name: string; description: string; nightlyRate: number; capacity: number; available: number; features: string[] };
 type Reservation = { id: string; confirmationCode: string; guestName: string; roomType: string; checkIn: string; checkOut: string; guests: number; total: number; status: string };
+type HomeInitialState = {
+  stay?: ReturnType<typeof defaultStay>;
+  availability?: AvailabilityRoom[] | null;
+  selectedRoom?: AvailabilityRoom | null;
+  searchError?: string;
+  busy?: boolean;
+  booking?: Reservation | null;
+  bookingError?: string;
+  lookup?: { code: string; email: string };
+  foundBooking?: Reservation | null;
+  lookupError?: string;
+  lookupBusy?: boolean;
+};
 
 const buildRef = import.meta.env.VITE_BUILD_REF || "local";
 const buildSha = (import.meta.env.VITE_BUILD_SHA || "local").slice(0, 7);
@@ -19,18 +32,19 @@ const rooms = [
   { id: "familia", name: "Suite Familiar", description: "Dos ambientes para viajar juntos con más comodidad.", nightlyRate: 1195, capacity: 5, features: ["1–5 huéspedes", "Dos camas", "Sala pequeña"] },
 ];
 
-export default function Home() {
-  const [stay, setStay] = useState(() => defaultStay());
-  const [availability, setAvailability] = useState<AvailabilityRoom[] | null>(null);
-  const [selectedRoom, setSelectedRoom] = useState<AvailabilityRoom | null>(null);
-  const [searchError, setSearchError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [booking, setBooking] = useState<Reservation | null>(null);
-  const [bookingError, setBookingError] = useState("");
-  const [lookup, setLookup] = useState({ code: "", email: "" });
-  const [foundBooking, setFoundBooking] = useState<Reservation | null>(null);
-  const [lookupError, setLookupError] = useState("");
-  const [lookupBusy, setLookupBusy] = useState(false);
+export default function Home({ initialState = {} }: { initialState?: HomeInitialState } = {}) {
+  const initial = initialState;
+  const [stay, setStay] = useState(() => initial.stay ?? defaultStay());
+  const [availability, setAvailability] = useState<AvailabilityRoom[] | null>(initial.availability ?? null);
+  const [selectedRoom, setSelectedRoom] = useState<AvailabilityRoom | null>(initial.selectedRoom ?? null);
+  const [searchError, setSearchError] = useState(initial.searchError ?? "");
+  const [busy, setBusy] = useState(initial.busy ?? false);
+  const [booking, setBooking] = useState<Reservation | null>(initial.booking ?? null);
+  const [bookingError, setBookingError] = useState(initial.bookingError ?? "");
+  const [lookup, setLookup] = useState(initial.lookup ?? { code: "", email: "" });
+  const [foundBooking, setFoundBooking] = useState<Reservation | null>(initial.foundBooking ?? null);
+  const [lookupError, setLookupError] = useState(initial.lookupError ?? "");
+  const [lookupBusy, setLookupBusy] = useState(initial.lookupBusy ?? false);
 
   return (
     <main>
