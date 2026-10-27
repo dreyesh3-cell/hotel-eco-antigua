@@ -66,6 +66,12 @@ test("muestra el error del servidor al consultar disponibilidad", async () => {
   assert.equal(s.calls.Busy.at(-1), false);
 });
 
+test("usa el mensaje alternativo si la API no explica el error de disponibilidad", async () => {
+  const s = state();
+  await searchRoomsAction(event(), s.value, async () => jsonResponse({}, false));
+  assert.match(s.calls.SearchError.at(-1), /No fue posible consultar disponibilidad/);
+});
+
 test("envía una reserva y limpia la selección al confirmarse", async () => {
   const s = state();
   let payload;
@@ -89,6 +95,12 @@ test("muestra un error al guardar una reserva", async () => {
   assert.equal(s.calls.Busy.at(-1), false);
 });
 
+test("usa el mensaje alternativo si la API no explica el error al reservar", async () => {
+  const s = state();
+  await submitReservationAction(event(), s.value, async () => jsonResponse({}, false), () => new Map());
+  assert.match(s.calls.BookingError.at(-1), /No se pudo completar la reserva/);
+});
+
 test("busca una reserva normalizando código y correo", async () => {
   const s = state();
   let requestedUrl = "";
@@ -106,6 +118,12 @@ test("muestra el error cuando no se encuentra una reserva", async () => {
   await lookupReservationAction(event(), s.value, async () => jsonResponse({ error: "No existe" }, false));
   assert.deepEqual(s.calls.LookupError, ["", "No existe"]);
   assert.equal(s.calls.LookupBusy.at(-1), false);
+});
+
+test("usa el mensaje alternativo si la API no explica por qué no encontró la reserva", async () => {
+  const s = state();
+  await lookupReservationAction(event(), s.value, async () => jsonResponse({}, false));
+  assert.match(s.calls.LookupError.at(-1), /No encontramos la reserva con esos datos/);
 });
 
 test("no intenta cancelar cuando no se encontró una reserva", async () => {
@@ -132,4 +150,10 @@ test("muestra el error cuando falla la cancelación", async () => {
   await cancelReservationAction(s.value, async () => jsonResponse({ error: "No se pudo cancelar" }, false));
   assert.equal(s.calls.LookupError.at(-1), "No se pudo cancelar");
   assert.equal(s.calls.LookupBusy.at(-1), false);
+});
+
+test("usa el mensaje alternativo si la API no explica por qué no pudo cancelar", async () => {
+  const s = state();
+  await cancelReservationAction(s.value, async () => jsonResponse({}, false));
+  assert.match(s.calls.LookupError.at(-1), /No fue posible cancelar la reserva/);
 });
