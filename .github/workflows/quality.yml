@@ -31,13 +31,17 @@ jobs:
         run: pnpm run test:coverage:lcov
       - name: Resumen de cobertura para SonarCloud
         run: |
-          test -s coverage/lcov.info
-          awk '/^SF:/{file=$0} /^LF:/{lines=$0} /^LH:/{print file, lines, $0}' coverage/lcov.info
+          test -s coverage/actions/lcov.info
+          test -s coverage/app/lcov.info
+          for report in coverage/actions/lcov.info coverage/app/lcov.info; do
+            echo "$report"
+            awk '/^SF:/{file=$0} /^LF:/{lines=$0} /^LH:/{print file, lines, $0}' "$report"
+          done
       - name: Guardar informe de cobertura
         uses: actions/upload-artifact@v4
         with:
           name: lcov-${{ github.run_id }}-${{ github.run_attempt }}
-          path: coverage/lcov.info
+          path: coverage/**/lcov.info
           if-no-files-found: error
           retention-days: 7
       - name: Verificación de tipos
