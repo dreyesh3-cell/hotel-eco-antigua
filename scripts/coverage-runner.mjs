@@ -33,6 +33,7 @@ assert.equal(calls.Availability.at(-1)[0].id, "patio");
 await searchRoomsAction(event(), state({ stay: { checkIn: "invalid", checkOut: "invalid", guests: 2 } }), async () => { throw new Error("invalid search should not fetch"); });
 await searchRoomsAction(event(), state(), async () => response({ rooms: [{ id: "patio", available: 0 }] }));
 await searchRoomsAction(event(), state(), async () => response({ error: "No hay disponibilidad" }, false));
+await searchRoomsAction(event(), state(), async () => response({}, false));
 await searchRoomsAction(event(), state(), async () => { throw "network failure"; });
 
 const submitState = state();
@@ -41,12 +42,14 @@ await submitReservationAction(event(), submitState, async () => response({ reser
 assert.equal(calls.Booking.at(-1).confirmationCode, "XYZ98765");
 assert.equal(scrolled, true);
 await submitReservationAction(event(), state(), async () => response({ error: "No hay cupo" }, false), formData);
+await submitReservationAction(event(), state(), async () => response({}, false), formData);
 await submitReservationAction(event(), state(), async () => { throw "network failure"; }, formData);
 
 const lookupState = state();
 await lookupReservationAction(event(), lookupState, async () => response({ reservation: { confirmationCode: "ABCD1234" } }));
 assert.equal(calls.FoundBooking.at(-1).confirmationCode, "ABCD1234");
 await lookupReservationAction(event(), state(), async () => response({ error: "No existe" }, false));
+await lookupReservationAction(event(), state(), async () => response({}, false));
 await lookupReservationAction(event(), state(), async () => { throw "network failure"; });
 
 await cancelReservationAction(state({ foundBooking: null }), async () => { throw new Error("missing booking should not fetch"); });
@@ -54,6 +57,7 @@ const cancelState = state();
 await cancelReservationAction(cancelState, async () => response({ reservation: { status: "CANCELADA" } }));
 assert.equal(calls.FoundBooking.at(-1).status, "CANCELADA");
 await cancelReservationAction(state(), async () => response({ error: "No se pudo cancelar" }, false));
+await cancelReservationAction(state(), async () => response({}, false));
 await cancelReservationAction(state(), async () => { throw "network failure"; });
 
 process.env.VITE_BUILD_REF = "qa";
@@ -96,6 +100,21 @@ try {
   }));
   assert.match(cancelledMarkup, /Cancelada/);
   assert.doesNotMatch(cancelledMarkup, /Cancelar reserva/);
+
+  const multipleGuestsMarkup = renderToStaticMarkup(createElement(Home, {
+    initialState: {
+      stay: { checkIn: "2026-11-01", checkOut: "2026-11-03", guests: 2, today: "2026-10-26" },
+      availability: [{ ...featuredRoom, available: 2 }],
+      selectedRoom: { ...featuredRoom, available: 2 },
+    },
+  }));
+  assert.match(multipleGuestsMarkup, /2 huéspedes/);
+  assert.match(multipleGuestsMarkup, /2 habitaciones disponibles/);
+
+  const missingCheckInMarkup = renderToStaticMarkup(createElement(Home, {
+    initialState: { stay: { checkIn: "", checkOut: "2026-11-03", guests: 1, today: "2026-10-26" } },
+  }));
+  assert.match(missingCheckInMarkup, /Fecha de salida/);
 } finally {
   await vite.close();
 }
