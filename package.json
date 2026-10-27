@@ -17,6 +17,7 @@
     "db:migrate:local": "wrangler d1 migrations apply DB --local --config dist/server/wrangler.json --persist-to .wrangler/state",
     "test": "node --test backend/*.test.js frontend/*.test.js",
     "test:coverage": "node --experimental-test-coverage --test backend/domain.test.js frontend/booking-form.test.js",
+    "test:coverage:lcov": "c8 --exclude scripts/coverage-runner.mjs --reporter=text --reporter=lcov --report-dir=coverage/actions node scripts/coverage-runner.mjs && c8 --exclude scripts/coverage-app.mjs --exclude frontend/src/booking-actions.js --exclude frontend/booking-form.js --reporter=text --reporter=lcov --report-dir=coverage/app node scripts/coverage-app.mjs",
     "test:api": "newman run api/Hotel-Eco-Antigua.postman_collection.json --environment api/local.postman_environment.json",
     "typecheck": "tsc --noEmit --project tsconfig.frontend.json"
   },
