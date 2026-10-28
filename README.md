@@ -1,6 +1,6 @@
 # Hotel Eco Antigua
 
-Aplicación de reservas para un hotel conceptual en Antigua Guatemala. El producto permite buscar habitaciones para fechas y tamaño de grupo, crear una reserva, consultarla con su código y correo, cancelarla hasta 48 horas antes de la llegada y explorar una guía de Antigua y Sacatepéquez.
+Aplicación de reservas para un hotel conceptual en Antigua Guatemala. El producto permite buscar habitaciones para fechas y tamaño de grupo o cantidad de personas, crear una reserva, consultarla con su código y correo, cancelarla hasta 48 horas antes de la llegada y explorar una guía de Antigua y Sacatepéquez.
 
 ## Ejecutarla
 
