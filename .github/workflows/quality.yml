@@ -25,6 +25,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Pruebas unitarias
         run: pnpm run test
+      - name: Cobertura de módulos críticos (backend y frontend)
+        run: pnpm run test:coverage
       - name: Cobertura
         run: pnpm run test:coverage:lcov
       - name: Verificación de tipos
