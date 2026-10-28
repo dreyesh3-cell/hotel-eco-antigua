@@ -27,6 +27,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Pruebas unitarias
         run: pnpm run test
+      - name: Cobertura de módulos críticos (backend y frontend)
+        run: pnpm run test:coverage
       - name: Cobertura
         run: pnpm run test:coverage:lcov
       - name: Resumen de cobertura para SonarCloud
